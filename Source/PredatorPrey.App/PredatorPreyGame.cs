@@ -28,6 +28,16 @@ public class PredatorPreyGame : Game
 
     private Color GetRegionColor(Region region)
     {
+        if (region.Organisms.Count > 0)
+        {
+            return Color.DarkRed;
+        }
+
+        if (region.AvailableFood >= 1)
+        {
+            return Color.Cyan;
+        }
+
         return region.Biome.TerrainType switch
         {
             TerrainType.Sea => Color.MediumBlue,
@@ -98,6 +108,9 @@ public class PredatorPreyGame : Game
                 }
             }
         }
+
+        _world.RunCycle();
+
         base.Update(gameTime);
     }
 

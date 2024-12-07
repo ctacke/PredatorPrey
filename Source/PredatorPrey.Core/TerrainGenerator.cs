@@ -51,7 +51,7 @@ public class TerrainGenerator
         };
     }
 
-    public Region[,] Generate()
+    public Region[,] Generate(double foodDistribution)
     {
         var regions = new Region[_width, _height];
 
@@ -65,6 +65,11 @@ public class TerrainGenerator
                     Location = new Point(x, y),
                     Biome = new Biome(TerrainType.Sea)
                 };
+
+                if (Random.Shared.NextSingle() <= foodDistribution)
+                {
+                    regions[x, y].AvailableFood = 1;
+                }
             }
         }
 
