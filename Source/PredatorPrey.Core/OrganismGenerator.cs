@@ -23,7 +23,21 @@ public class OrganismGenerator()
             } while (world.Population.GetOrganismsAtLocation(xPosition, yPosition).Count() != 0);
 
             world.Population.Add(organism, xPosition, yPosition);
-            organism.Region = world.Regions[xPosition, yPosition];
         }
+    }
+
+    public Organism? Reproduce(Organism parentA, Organism parentB)
+    {
+        if (Random.Shared.NextSingle() < (parentA.Fertility * parentB.Fertility))
+        {
+            return new Organism
+            {
+                ID = Guid.NewGuid(),
+                ParentA = parentA.ID,
+                ParentB = parentB.ID,
+            };
+        }
+
+        return null;
     }
 }

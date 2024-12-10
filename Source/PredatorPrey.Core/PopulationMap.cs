@@ -17,6 +17,13 @@ public class PopulationMap : IEnumerable<Organism>
             : null;
     }
 
+    public IEnumerable<Point> GetPointsWithMultipleOrganisms()
+    {
+        return _locationToOrganisms
+            .Where(l => l.Value.Count > 1)
+            .Select(l => l.Key);
+    }
+
     public IEnumerable<Organism> GetOrganismsAtLocation(int x, int y)
     {
         return GetOrganismsAtLocation(new Point(x, y));
@@ -27,6 +34,16 @@ public class PopulationMap : IEnumerable<Organism>
         return _locationToOrganisms.TryGetValue(location, out var organisms)
             ? organisms
             : Enumerable.Empty<Organism>();
+    }
+
+    public void AddRange(IEnumerable<Organism> organisms, int worldWidth, int worldHeight)
+    {
+        foreach (var o in organisms)
+        {
+            Add(o,
+                Random.Shared.Next(0, worldWidth),
+                Random.Shared.Next(0, worldHeight));
+        }
     }
 
     public void Add(Organism organism, int x, int y)

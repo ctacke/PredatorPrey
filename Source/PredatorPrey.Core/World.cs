@@ -1,17 +1,20 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 
 namespace PredatorPrey;
 
 public class World
 {
-    public const int InitialPopulationSize = 1000;
+    public const int InitialPopulationSize = 100;
     public const double InitialFoodDistribution = 0.05;
+    public const double ReproductionRate = 0.50; // percent chance an interaction will yield reproduction
 
     public Size Dimensions { get; } = new Size(512, 256);
     public Region[,] Regions { get; set; }
     public PopulationMap Population { get; set; } = new();
 
-    private MotionController motionController;
+    private MotionController _motionController;
+    private OrganismGenerator _organismGenerator;
 
     public World()
     {
@@ -20,14 +23,14 @@ public class World
 
     private void Build()
     {
-        motionController = new MotionController();
+        _motionController = new MotionController();
 
         var terrainGenerator = new TerrainGenerator(Dimensions.Width, Dimensions.Height);
 
         Regions = terrainGenerator.Generate(InitialFoodDistribution);
 
-        var organismGenerator = new OrganismGenerator();
-        organismGenerator.Populate(this, InitialPopulationSize);
+        _organismGenerator = new OrganismGenerator();
+        _organismGenerator.Populate(this, InitialPopulationSize);
     }
 
     public void RunCycle()
@@ -37,25 +40,46 @@ public class World
             GrowFood(region);
         }
 
+        if (Population.Population == 0)
+        {
+            Debugger.Break();
+        }
+
         foreach (var organism in Population)
         {
-            // TODO: mate / eat
-            motionController.Move(organism, Population, this.Dimensions.Width, this.Dimensions.Height);
+            _motionController.Move(organism, Population, this.Dimensions.Width, this.Dimensions.Height);
 
             var location = Population.GetOrganismLocation(organism);
             if (location != null)
             {
-                if (Regions[location.Value.X, location.Value.Y].AvailableFood >= 1)
-                {
-                    // TODO: make organism eat rate variable
-                    organism.Health += 20;
-                    Regions[location.Value.X, location.Value.Y].AvailableFood -= 1;
-                }
+                organism.TryEat(Regions[location.Value.X, location.Value.Y]);
             }
 
             if (organism.IsDead)
             {
                 Population.Remove(organism);
+            }
+            else
+            {
+                organism.Age++;
+            }
+        }
+
+        // reproduction cycle
+        foreach (var overlap in Population.GetPointsWithMultipleOrganisms().ToArray())
+        {
+            var parents = Population.GetOrganismsAtLocation(overlap);
+
+            var newOrganisms = parents
+                .SelectMany((o1, i) => parents.Skip(i + 1)
+                .Select(o2 => _organismGenerator.Reproduce(o1, o2)))
+                .Where(c => c != null)
+                .ToList();
+
+            if (newOrganisms.Count > 0)
+            {
+                Population.AddRange(newOrganisms, this.Dimensions.Width, this.Dimensions.Height);
+                Debug.WriteLine($"Population: {Population.Population}");
             }
         }
     }

@@ -9,8 +9,9 @@ public class MotionController
 
         if (speed > 0)
         {
-            int newX = organism.Region.Location.X;
-            int newY = organism.Region.Location.Y;
+            var location = populationMap.GetOrganismLocation(organism);
+            int newX = location.Value.X;
+            int newY = location.Value.Y;
 
             // 7 0 1
             // 6 * 2
@@ -66,11 +67,15 @@ public class Organism
     public Guid ID { get; set; }
     public Guid ParentA { get; set; }
     public Guid ParentB { get; set; }
+    public ulong Age { get; set; }
 
     public Chromosome ChromosomeA { get; set; }
     public Chromosome ChromosomeB { get; set; }
 
     public bool IsDead => Health == 0;
+
+    // liklihood that the organism will reproduce when interacting with another
+    public double Fertility { get; set; } = 0.50;
 
     public short Health
     {
@@ -83,7 +88,15 @@ public class Organism
         }
     }
 
-    public Region Region { get; set; }
+    public void TryEat(Region region)
+    {
+        if (region.AvailableFood >= 1)
+        {
+            // TODO: make organism health rate increase variable
+            Health += 20;
+            region.AvailableFood -= 1;
+        }
+    }
 }
 
 public class Chromosome
