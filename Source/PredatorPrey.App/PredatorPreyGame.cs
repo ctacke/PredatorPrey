@@ -2,8 +2,14 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Linq;
 
 namespace PredatorPrey.App;
+
+public class ViewOptions
+{
+    public bool ShowFood { get; set; }
+}
 
 public class PredatorPreyGame : Game
 {
@@ -17,8 +23,15 @@ public class PredatorPreyGame : Game
 
     private World _world;
 
+    private ViewOptions _viewOptions;
+
     public PredatorPreyGame()
     {
+        _viewOptions = new ViewOptions
+        {
+            ShowFood = false
+        };
+
         _world = new World();
 
         _graphics = new GraphicsDeviceManager(this);
@@ -28,12 +41,12 @@ public class PredatorPreyGame : Game
 
     private Color GetRegionColor(Region region)
     {
-        if (region.Organisms.Count > 0)
+        if (_world.Population.GetOrganismsAtLocation(region.Location).Count() > 0)
         {
             return Color.DarkRed;
         }
 
-        if (region.AvailableFood >= 1)
+        if (_viewOptions.ShowFood && region.AvailableFood >= 1)
         {
             return Color.Cyan;
         }

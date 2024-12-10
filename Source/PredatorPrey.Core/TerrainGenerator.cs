@@ -68,7 +68,7 @@ public class TerrainGenerator
 
                 if (Random.Shared.NextSingle() <= foodDistribution)
                 {
-                    regions[x, y].AvailableFood = 1;
+                    regions[x, y].AvailableFood = Random.Shared.Next(10);
                 }
             }
         }

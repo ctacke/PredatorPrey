@@ -6,10 +6,10 @@ public class World
 {
     public const int InitialPopulationSize = 1000;
     public const double InitialFoodDistribution = 0.05;
-    public const int HealthPerFoodUnit = 10;
 
     public Size Dimensions { get; } = new Size(512, 256);
     public Region[,] Regions { get; set; }
+    public PopulationMap Population { get; set; } = new();
 
     private MotionController motionController;
 
@@ -37,40 +37,31 @@ public class World
             GrowFood(region);
         }
 
-        foreach (var region in Regions)
+        foreach (var organism in Population)
         {
-            foreach (var organism in region.Organisms.ToList())
+            // TODO: mate / eat
+            motionController.Move(organism, Population, this.Dimensions.Width, this.Dimensions.Height);
+
+            var location = Population.GetOrganismLocation(organism);
+            if (location != null)
             {
-                // TODO: mate / eat
-                motionController.Move(organism, this);
-
-                if (region.AvailableFood >= 1)
+                if (Regions[location.Value.X, location.Value.Y].AvailableFood >= 1)
                 {
-                    organism.Health += HealthPerFoodUnit;
+                    // TODO: make organism eat rate variable
+                    organism.Health += 20;
+                    Regions[location.Value.X, location.Value.Y].AvailableFood -= 1;
                 }
+            }
 
-                if (organism.IsDead)
-                {
-                    region.Organisms.Remove(organism);
-                }
+            if (organism.IsDead)
+            {
+                Population.Remove(organism);
             }
         }
     }
 
-    private double _foodGenerationRate = 0.01;
-
     private void GrowFood(Region region)
     {
-        var rate = _foodGenerationRate;
-
-        if (region.AvailableFood > 1)
-        {
-            rate /= 2;
-        }
-
-        if (Random.Shared.NextDouble() < rate)
-        {
-            region.AvailableFood += 0.1;
-        }
+        region.AvailableFood += region.Biome.GrowFood();
     }
 }
