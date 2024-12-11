@@ -5,13 +5,17 @@ namespace PredatorPrey;
 
 public class World
 {
-    public const int InitialPopulationSize = 100;
+    public const int InitialPopulationSize = 200;
     public const double InitialFoodDistribution = 0.05;
-    public const double ReproductionRate = 0.50; // percent chance an interaction will yield reproduction
 
-    public Size Dimensions { get; } = new Size(512, 256);
+    public Size Dimensions { get; } = new Size(256, 128);
+    //public Size Dimensions { get; } = new Size(512, 256);
     public Region[,] Regions { get; set; }
     public PopulationMap Population { get; set; } = new();
+
+    public long WorldAge { get; private set; } = 0;
+    public int DeathsFromAge { get; private set; } = 0;
+    public int DeathsFromStarvation { get; private set; } = 0;
 
     private MotionController _motionController;
     private OrganismGenerator _organismGenerator;
@@ -35,6 +39,8 @@ public class World
 
     public void RunCycle()
     {
+        WorldAge++;
+
         foreach (var region in Regions)
         {
             GrowFood(region);
@@ -42,26 +48,56 @@ public class World
 
         if (Population.Population == 0)
         {
+            Console.WriteLine("Everything is dead!");
+            Console.WriteLine($" Age of the world: {WorldAge} cycles");
+            Console.WriteLine($" Deaths from old age: {DeathsFromAge}");
+            Console.WriteLine($" Deaths from starvation: {DeathsFromStarvation}");
+
             Debugger.Break();
         }
 
+        int oldest = 0;
+
         foreach (var organism in Population)
         {
-            _motionController.Move(organism, Population, this.Dimensions.Width, this.Dimensions.Height);
-
             var location = Population.GetOrganismLocation(organism);
             if (location != null)
             {
-                organism.TryEat(Regions[location.Value.X, location.Value.Y]);
-            }
+                var region = Regions[location.Value.X, location.Value.Y];
 
-            if (organism.IsDead)
-            {
-                Population.Remove(organism);
-            }
-            else
-            {
-                organism.Age++;
+                var motion = _motionController.Move(organism, Population, this.Dimensions.Width, this.Dimensions.Height);
+                organism.Metabolize(region, motion);
+
+                organism.TryEat(region);
+
+                if (organism.IsDead)
+                {
+                    // fertilize the biome
+                    region.AvailableFood += organism.ValueAsFood;
+
+                    if (organism.DeathReason != null)
+                    {
+                        switch (organism.DeathReason)
+                        {
+                            case DeathReason.Age:
+                                DeathsFromAge++;
+                                break;
+                            case DeathReason.Starvation:
+                                DeathsFromStarvation++;
+                                break;
+                        }
+                    }
+
+                    Population.Remove(organism);
+                }
+                else
+                {
+                    organism.Age++;
+                    if (organism.Age > oldest)
+                    {
+                        oldest = organism.Age;
+                    }
+                }
             }
         }
 
@@ -87,5 +123,7 @@ public class World
     private void GrowFood(Region region)
     {
         region.AvailableFood += region.Biome.GrowFood();
+        var max = region.Biome.GetMaxFoodCapacity();
+        if (region.AvailableFood > max) { region.AvailableFood = max; }
     }
 }

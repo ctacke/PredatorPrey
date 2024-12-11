@@ -73,6 +73,11 @@ public class PopulationMap : IEnumerable<Organism>
         {
             _locationToOrganisms.TryGetValue(location, out var locationOrganisms);
             locationOrganisms?.Remove(organism);
+
+            if (_locationToOrganisms[location].Count == 0)
+            {
+                _locationToOrganisms.TryRemove(location, out _);
+            }
         }
     }
 

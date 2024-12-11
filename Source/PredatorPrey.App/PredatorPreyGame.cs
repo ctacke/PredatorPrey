@@ -102,7 +102,7 @@ public class PredatorPreyGame : Game
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
-
+        /*
         // Handle mouse input
         MouseState mouseState = Mouse.GetState();
 
@@ -121,7 +121,7 @@ public class PredatorPreyGame : Game
                 }
             }
         }
-
+        */
         _world.RunCycle();
 
         base.Update(gameTime);
