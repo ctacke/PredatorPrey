@@ -11,7 +11,7 @@ public class Biome(TerrainType terrainType)
         switch (TerrainType)
         {
             case TerrainType.Sea:
-                baseResult = 0.005f;
+                baseResult = 0.05f;
                 break;
             case TerrainType.Littoral:
                 baseResult = 0.007f;
@@ -26,7 +26,7 @@ public class Biome(TerrainType terrainType)
                 baseResult = 0.004f;
                 break;
             case TerrainType.Mountain:
-                baseResult = 0.001f;
+                baseResult = 0.002f;
                 break;
         }
 

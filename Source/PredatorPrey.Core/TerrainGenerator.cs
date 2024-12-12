@@ -68,7 +68,7 @@ public class TerrainGenerator
 
                 if (Random.Shared.NextSingle() <= foodDistribution)
                 {
-                    regions[x, y].AvailableFood = Random.Shared.Next(10);
+                    regions[x, y].AvailableFood = Random.Shared.Next(2);
                 }
             }
         }
@@ -121,76 +121,3 @@ public class TerrainGenerator
         return regions;
     }
 }
-/*
-public static class TerrainGenerator
-{
-
-    private static float GenerateSimpleNoise(int x, int y)
-    {
-        // Very basic noise generation
-        return (float)(Math.Sin(x * 0.1) + Math.Cos(y * 0.1) + 2) / 4;
-    }
-
-    public static Region[,] Generate(int width, int height)
-    {
-        var regions = new Region[width, height];
-
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                float noiseValue = GenerateSimpleNoise(x, y);
-
-                Terrain terrain = noiseValue switch
-                {
-                    < 0.2f => new Sea(),
-                    < 0.3f => new Littoral(),
-                    < 0.4f => new Beach(),
-                    < 0.6f => new Grass(),
-                    < 0.8f => new Forest(),
-                    _ => new Mountain()
-                };
-
-                regions[x, y] = new Region
-                {
-                    Location = new Point(x, y),
-                    Terrain = terrain
-                };
-            }
-        }
-
-        return regions;
-    }
-
-    public static Region[,] Generate2(int width, int height)
-    {
-        var regions = new Region[width, height];
-
-        // fill with water
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
-            {
-                regions[x, y] = new Region
-                {
-                    Location = new Point(x, y),
-                    Terrain = new Sea()
-                };
-            }
-        }
-
-        // seed a mountain
-
-        // create forests
-
-        // create grasslands
-
-        // create beach
-
-        // create littoral
-
-        return regions;
-
-    }
-}
-*/

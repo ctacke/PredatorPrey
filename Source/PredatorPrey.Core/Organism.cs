@@ -21,7 +21,45 @@ public class Organism
     public Chromosome ChromosomeA { get; set; }
     public Chromosome ChromosomeB { get; set; }
 
+    public int MaxAge { get; set; } = 1000;
+    public int MinReproductionAge { get; set; } = 100;
+    /// <summary>
+    /// The likelihood that the organism will reproduce when interacting with another (percentile)
+    /// </summary>
+    public float Fertility { get; set; } = 0.16f;
+
+    /// <summary>
+    /// rate at which food is consumed (and, perhaps, things like movement rate)
+    /// </summary>
+    public float MetabolicRate { get; set; } = 1.0f;
+
+    /// <summary>
+    /// How much "food" is this organism worth on death (as compost to the biome or as food to another organism)
+    /// </summary>
+    public float ValueAsFood { get; set; } = 0.5f;
+
     public bool IsDead => Health == 0;
+
+    public Organism()
+    {
+        ChromosomeA = new Chromosome
+        {
+            Genes =
+             [
+                new Legs { Value = 0 },
+                new Fins { Value = 1 }
+            ]
+        };
+    }
+
+    public bool CanReproduce
+    {
+        get
+        {
+            return Age >= MinReproductionAge;
+        }
+    }
+
     public DeathReason? DeathReason
     {
         get => _deathReason;
@@ -30,23 +68,6 @@ public class Organism
             if (_deathReason == null) _deathReason = value;
         }
     }
-
-    /// <summary>
-    /// The likelihood that the organism will reproduce when interacting with another (percentile)
-    /// </summary>
-    public float Fertility { get; set; } = 0.46f;
-
-    /// <summary>
-    /// rate at which food is consumed (and, perhaps, things like movement rate)
-    /// </summary>
-    public float MetabolicRate { get; set; } = 1.0f;
-
-    public int MaxAge { get; set; } = 1000;
-
-    /// <summary>
-    /// How much "food" is this organism worth on death (as compost to the biome or as food to another organism)
-    /// </summary>
-    public float ValueAsFood { get; set; } = 0.5f;
 
     public int Age
     {
@@ -91,11 +112,112 @@ public class Organism
         if (IsDead) return;
 
         // TODO: metabolize differently based on biome/terrain?
-        Health -= movementAmount;
+        // TODO: add a gene for base metabolic burn
+        if (movementAmount == 0)
+        { // even no movement uses energy
+            Health--;
+        }
+        else
+        {
+            Health -= movementAmount;
+        }
+
         if (IsDead)
         {
             DeathReason = PredatorPrey.DeathReason.Starvation;
         }
+    }
+
+    public short GetMovementSpeed(TerrainType terrain)
+    {
+        short baseMotion = 0;
+
+        switch (terrain)
+        {
+            case TerrainType.Sea:
+                baseMotion = 3;
+                break;
+            case TerrainType.Littoral:
+                baseMotion = 2;
+                break;
+            case TerrainType.Beach:
+                baseMotion = 2;
+                break;
+            case TerrainType.Grass:
+                baseMotion = 3;
+                break;
+            case TerrainType.Forest:
+                baseMotion = 2;
+                break;
+            case TerrainType.Mountain:
+                baseMotion = 1;
+                break;
+        }
+
+        baseMotion = (short)Random.Shared.Next(0, baseMotion + 1);
+
+        short maxMotion = 0;
+
+        foreach (IMovementGene m in ChromosomeA.Genes)
+        {
+            var modifier = m.ModifyMovement(this, terrain, baseMotion);
+            if (modifier > maxMotion) { maxMotion = modifier; }
+        }
+
+        return maxMotion;
+    }
+}
+
+public interface IMovementGene
+{
+    short ModifyMovement(Organism organism, TerrainType terrain, short baseMovement);
+}
+
+public class Fins : Gene, IMovementGene
+{
+    // 0 or 1 (missing or present)
+    public Fins()
+    {
+        TraitType = TraitType.Dominant;
+        Value = 0;
+    }
+
+    public short ModifyMovement(Organism organism, TerrainType terrain, short baseMovement)
+    {
+        switch (terrain)
+        {
+            case TerrainType.Sea:
+            case TerrainType.Littoral:
+                if (Value > 0) return baseMovement;
+                break;
+        }
+
+        return 0;
+    }
+}
+
+public class Legs : Gene, IMovementGene
+{
+    // 0 or 1 (missing or present)
+    public Legs()
+    {
+        TraitType = TraitType.Dominant;
+        Value = 0;
+    }
+
+    public short ModifyMovement(Organism organism, TerrainType terrain, short baseMovement)
+    {
+        switch (terrain)
+        {
+            case TerrainType.Beach:
+            case TerrainType.Grass:
+            case TerrainType.Forest:
+            case TerrainType.Mountain:
+                if (Value > 0) return baseMovement;
+                break;
+        }
+
+        return 0;
     }
 }
 

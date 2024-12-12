@@ -46,6 +46,14 @@ public class PopulationMap : IEnumerable<Organism>
         }
     }
 
+    public void AddRange(IEnumerable<Organism> organisms, Point location)
+    {
+        foreach (var o in organisms)
+        {
+            Add(o, location);
+        }
+    }
+
     public void Add(Organism organism, int x, int y)
     {
         Add(organism, new Point(x, y));

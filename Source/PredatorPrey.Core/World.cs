@@ -46,12 +46,17 @@ public class World
             GrowFood(region);
         }
 
+        if (Population.Population > 10000)
+        {
+            Debugger.Break();
+        }
+
         if (Population.Population == 0)
         {
-            Console.WriteLine("Everything is dead!");
-            Console.WriteLine($" Age of the world: {WorldAge} cycles");
-            Console.WriteLine($" Deaths from old age: {DeathsFromAge}");
-            Console.WriteLine($" Deaths from starvation: {DeathsFromStarvation}");
+            Debug.WriteLine("Everything is dead!");
+            Debug.WriteLine($" Age of the world: {WorldAge} cycles");
+            Debug.WriteLine($" Deaths from old age: {DeathsFromAge}");
+            Debug.WriteLine($" Deaths from starvation: {DeathsFromStarvation}");
 
             Debugger.Break();
         }
@@ -65,7 +70,7 @@ public class World
             {
                 var region = Regions[location.Value.X, location.Value.Y];
 
-                var motion = _motionController.Move(organism, Population, this.Dimensions.Width, this.Dimensions.Height);
+                var motion = _motionController.Move(organism, Population, this);
                 organism.Metabolize(region, motion);
 
                 organism.TryEat(region);
@@ -114,7 +119,7 @@ public class World
 
             if (newOrganisms.Count > 0)
             {
-                Population.AddRange(newOrganisms, this.Dimensions.Width, this.Dimensions.Height);
+                Population.AddRange(newOrganisms, overlap);
                 Debug.WriteLine($"Population: {Population.Population}");
             }
         }

@@ -28,14 +28,17 @@ public class OrganismGenerator()
 
     public Organism? Reproduce(Organism parentA, Organism parentB)
     {
-        if (Random.Shared.NextSingle() < (parentA.Fertility * parentB.Fertility))
+        if (parentA.CanReproduce && parentB.CanReproduce)
         {
-            return new Organism
+            if (Random.Shared.NextSingle() < (parentA.Fertility * parentB.Fertility))
             {
-                ID = Guid.NewGuid(),
-                ParentA = parentA.ID,
-                ParentB = parentB.ID,
-            };
+                return new Organism
+                {
+                    ID = Guid.NewGuid(),
+                    ParentA = parentA.ID,
+                    ParentB = parentB.ID,
+                };
+            }
         }
 
         return null;
