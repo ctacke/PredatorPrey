@@ -2,13 +2,13 @@
 
 public class MotionController
 {
-    public short Move(Organism organism, PopulationMap populationMap, World world)
+    public (int newX, int newY, short speed) Move(Organism organism, PopulationMap populationMap, World world)
     {
         var direction = Random.Shared.Next(0, 8);
 
         var location = populationMap.GetOrganismLocation(organism);
 
-        if (location == null) return 0;
+        if (location == null) return (0, 0, 0);
 
         short speed = organism.GetMovementSpeed(world.Regions[location.Value.X, location.Value.Y].Biome.TerrainType);
 
@@ -55,8 +55,16 @@ public class MotionController
         if (newX > world.Dimensions.Width - 1) newX = world.Dimensions.Width - 1;
         if (newY > world.Dimensions.Height - 1) newY = world.Dimensions.Height - 1;
 
-        populationMap.Add(organism, newX, newY);
+        // can the target location support the population?
+        var existing = world.Population.GetOrganismsAtLocation(newX, newY).Count();
+        var max = world.Regions[newX, newY].Biome.GetMaxPopulationCapacity();
+        if (existing < max)
+        {
+            populationMap.Add(organism, newX, newY);
+            return (newX, newY, speed);
+        }
 
-        return speed;
+        // unable to move due to population density
+        return (location.Value.X, location.Value.Y, 0);
     }
 }

@@ -16,6 +16,7 @@ public class World
     public long WorldAge { get; private set; } = 0;
     public int DeathsFromAge { get; private set; } = 0;
     public int DeathsFromStarvation { get; private set; } = 0;
+    public int DeathsFromOverpopulation { get; private set; } = 0;
 
     private MotionController _motionController;
     private OrganismGenerator _organismGenerator;
@@ -57,6 +58,7 @@ public class World
             Debug.WriteLine($" Age of the world: {WorldAge} cycles");
             Debug.WriteLine($" Deaths from old age: {DeathsFromAge}");
             Debug.WriteLine($" Deaths from starvation: {DeathsFromStarvation}");
+            Debug.WriteLine($" Deaths from over-population: {DeathsFromOverpopulation}");
 
             Debugger.Break();
         }
@@ -71,9 +73,26 @@ public class World
                 var region = Regions[location.Value.X, location.Value.Y];
 
                 var motion = _motionController.Move(organism, Population, this);
-                organism.Metabolize(region, motion);
 
-                organism.TryEat(region);
+                var currentpop = Population.GetOrganismsAtLocation(motion.newX, motion.newY).Count();
+                var max = region.Biome.GetMaxPopulationCapacity();
+
+                if (currentpop > max)
+                {
+                    // region is overpopulated
+                    organism.Health -= (short)(currentpop - max);
+                    if (organism.IsDead)
+                    {
+                        organism.DeathReason = DeathReason.Overpopulation;
+                        DeathsFromOverpopulation++;
+                    }
+                }
+
+                if (!organism.IsDead)
+                {
+                    organism.Metabolize(region, motion.speed);
+                    organism.TryEat(region);
+                }
 
                 if (organism.IsDead)
                 {

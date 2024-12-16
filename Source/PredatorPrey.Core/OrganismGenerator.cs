@@ -32,12 +32,7 @@ public class OrganismGenerator()
         {
             if (Random.Shared.NextSingle() < (parentA.Fertility * parentB.Fertility))
             {
-                return new Organism
-                {
-                    ID = Guid.NewGuid(),
-                    ParentA = parentA.ID,
-                    ParentB = parentB.ID,
-                };
+                return new Organism(parentA, parentB);
             }
         }
 

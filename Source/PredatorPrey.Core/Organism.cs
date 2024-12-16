@@ -4,6 +4,7 @@ public enum DeathReason
 {
     Starvation,
     Age,
+    Overpopulation,
     Predation,
     Disease
 }
@@ -26,7 +27,7 @@ public class Organism
     /// <summary>
     /// The likelihood that the organism will reproduce when interacting with another (percentile)
     /// </summary>
-    public float Fertility { get; set; } = 0.16f;
+    public float Fertility { get; set; } = 0.46f;
 
     /// <summary>
     /// rate at which food is consumed (and, perhaps, things like movement rate)
@@ -40,14 +41,33 @@ public class Organism
 
     public bool IsDead => Health == 0;
 
+    public Organism(Organism parentA, Organism parentB)
+    {
+        ID = new Guid();
+
+        var geneCount = parentA.ChromosomeA.Genes.Length;
+
+        this.ChromosomeA = new Chromosome()
+        {
+            Genes = new Gene[geneCount]
+        };
+
+        for (var i = 0; i < geneCount; i++)
+        {
+            this.ChromosomeA.Genes[i] = parentA.ChromosomeA.Genes[i].Crossover(parentB.ChromosomeA.Genes[i]);
+        }
+    }
+
     public Organism()
     {
+        ID = new Guid();
+
         ChromosomeA = new Chromosome
         {
             Genes =
              [
-                new Legs { Value = 0 },
-                new Fins { Value = 1 }
+                new Legs { Value = (byte)Random.Shared.Next(0,2) },
+                new Fins { Value = (byte)Random.Shared.Next(0,2) }
             ]
         };
     }
@@ -63,7 +83,7 @@ public class Organism
     public DeathReason? DeathReason
     {
         get => _deathReason;
-        private set
+        set
         {
             if (_deathReason == null) _deathReason = value;
         }
@@ -98,6 +118,16 @@ public class Organism
     public void TryEat(Region region)
     {
         if (IsDead) return;
+
+        if (region.AvailableFood <= 0)
+        {
+            Health -= 1; // starvation
+
+            if (IsDead)
+            {
+                DeathReason = PredatorPrey.DeathReason.Starvation;
+            }
+        }
 
         if (region.AvailableFood >= 1)
         {
@@ -166,74 +196,4 @@ public class Organism
 
         return maxMotion;
     }
-}
-
-public interface IMovementGene
-{
-    short ModifyMovement(Organism organism, TerrainType terrain, short baseMovement);
-}
-
-public class Fins : Gene, IMovementGene
-{
-    // 0 or 1 (missing or present)
-    public Fins()
-    {
-        TraitType = TraitType.Dominant;
-        Value = 0;
-    }
-
-    public short ModifyMovement(Organism organism, TerrainType terrain, short baseMovement)
-    {
-        switch (terrain)
-        {
-            case TerrainType.Sea:
-            case TerrainType.Littoral:
-                if (Value > 0) return baseMovement;
-                break;
-        }
-
-        return 0;
-    }
-}
-
-public class Legs : Gene, IMovementGene
-{
-    // 0 or 1 (missing or present)
-    public Legs()
-    {
-        TraitType = TraitType.Dominant;
-        Value = 0;
-    }
-
-    public short ModifyMovement(Organism organism, TerrainType terrain, short baseMovement)
-    {
-        switch (terrain)
-        {
-            case TerrainType.Beach:
-            case TerrainType.Grass:
-            case TerrainType.Forest:
-            case TerrainType.Mountain:
-                if (Value > 0) return baseMovement;
-                break;
-        }
-
-        return 0;
-    }
-}
-
-public class Chromosome
-{
-    public Gene[] Genes { get; set; }
-}
-
-public enum TraitType
-{
-    Dominant,
-    Recessive
-}
-
-public class Gene
-{
-    public byte Value { get; set; }
-    public TraitType TraitType { get; set; }
 }
