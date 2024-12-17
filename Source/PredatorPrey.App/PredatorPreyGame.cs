@@ -39,11 +39,20 @@ public class PredatorPreyGame : Game
         IsMouseVisible = true;
     }
 
+    private Color GetOrganismColor(Organism organism)
+    {
+        if (organism.IsAmphibian()) return Color.PaleGreen;
+        if (organism.IsAcquatic()) return Color.White;
+        return Color.DarkRed;
+    }
+
     private Color GetRegionColor(Region region)
     {
-        if (_world.Population.GetOrganismsAtLocation(region.Location).Count() > 0)
+        var regionOrganisms = _world.Population.GetOrganismsAtLocation(region.Location);
+
+        if (regionOrganisms.Count() > 0)
         {
-            return Color.DarkRed;
+            return GetOrganismColor(regionOrganisms.First());
         }
 
         if (_viewOptions.ShowFood && region.AvailableFood >= 1)

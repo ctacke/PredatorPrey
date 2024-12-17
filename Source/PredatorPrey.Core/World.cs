@@ -5,7 +5,7 @@ namespace PredatorPrey;
 
 public class World
 {
-    public const int InitialPopulationSize = 200;
+    public const int InitialPopulationSize = 500;
     public const double InitialFoodDistribution = 0.05;
 
     public Size Dimensions { get; } = new Size(256, 128);
@@ -49,7 +49,7 @@ public class World
 
         if (Population.Population > 10000)
         {
-            Debugger.Break();
+            //Debugger.Break();
         }
 
         if (Population.Population == 0)
@@ -85,6 +85,22 @@ public class World
                     {
                         organism.DeathReason = DeathReason.Overpopulation;
                         DeathsFromOverpopulation++;
+                    }
+
+                    // region is superpopulated.  Reduce food to zero
+                    if (currentpop > 2 * max)
+                    {
+                        region.AvailableFood = 0;
+                    }
+
+                    if (currentpop > 3 * max)
+                    {
+                        organism.Health /= 4;
+                    }
+
+                    if (currentpop > 4 * max)
+                    {
+                        organism.Health = 0;
                     }
                 }
 
@@ -130,16 +146,26 @@ public class World
         {
             var parents = Population.GetOrganismsAtLocation(overlap);
 
-            var newOrganisms = parents
-                .SelectMany((o1, i) => parents.Skip(i + 1)
-                .Select(o2 => _organismGenerator.Reproduce(o1, o2)))
-                .Where(c => c != null)
-                .ToList();
+            var region = Regions[overlap.X, overlap.Y];
+            var max = region.Biome.GetMaxPopulationCapacity();
 
-            if (newOrganisms.Count > 0)
+            if (parents.Count() < (max * 1.5))
             {
-                Population.AddRange(newOrganisms, overlap);
-                Debug.WriteLine($"Population: {Population.Population}");
+                var newOrganisms = parents
+                    .SelectMany((o1, i) => parents.Skip(i + 1)
+                    .Select(o2 => _organismGenerator.Reproduce(o1, o2)))
+                    .Where(c => c != null)
+                    .ToList();
+
+                if (newOrganisms.Count > 0)
+                {
+                    Population.AddRange(newOrganisms, overlap);
+                    Debug.WriteLine($"Population: {Population.Population}");
+                }
+            }
+            else
+            {
+                Debug.WriteLine($"Sterile land");
             }
         }
     }

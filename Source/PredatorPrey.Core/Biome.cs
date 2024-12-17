@@ -14,7 +14,7 @@ public class Biome(TerrainType terrainType)
                 baseResult = 0.05f;
                 break;
             case TerrainType.Littoral:
-                baseResult = 0.07f;
+                baseResult = 0.06f;
                 break;
             case TerrainType.Beach:
                 baseResult = 0.03f;

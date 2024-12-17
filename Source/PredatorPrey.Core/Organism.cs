@@ -24,10 +24,11 @@ public class Organism
 
     public int MaxAge { get; set; } = 1000;
     public int MinReproductionAge { get; set; } = 100;
+
     /// <summary>
     /// The likelihood that the organism will reproduce when interacting with another (percentile)
     /// </summary>
-    public float Fertility { get; set; } = 0.46f;
+    public float Fertility { get; set; } = 0.50f;
 
     /// <summary>
     /// rate at which food is consumed (and, perhaps, things like movement rate)
@@ -38,6 +39,16 @@ public class Organism
     /// How much "food" is this organism worth on death (as compost to the biome or as food to another organism)
     /// </summary>
     public float ValueAsFood { get; set; } = 0.5f;
+
+    /// <summary>
+    /// When a region can't provide food, the organism's health falls by this * metabolic rate
+    /// </summary>
+    public short StarvationFactor { get; set; } = 2;
+
+    /// <summary>
+    /// How much health does the organism get per metabolic-rate unit of food
+    /// </summary>
+    public short HealthPerFood { get; set; } = 5;
 
     public bool IsDead => Health == 0;
 
@@ -76,6 +87,7 @@ public class Organism
     {
         get
         {
+            if (IsDead) return false;
             return Age >= MinReproductionAge;
         }
     }
@@ -119,20 +131,20 @@ public class Organism
     {
         if (IsDead) return;
 
-        if (region.AvailableFood <= 0)
+        if (region.AvailableFood <= MetabolicRate)
         {
-            Health -= 1; // starvation
+            Health = (short)(Health - (short)(MetabolicRate * StarvationFactor)); // starvation
+            region.AvailableFood = 0;
 
             if (IsDead)
             {
                 DeathReason = PredatorPrey.DeathReason.Starvation;
             }
         }
-
-        if (region.AvailableFood >= 1)
+        else
         {
             // TODO: make organism health rate increase variable
-            Health += 20;
+            Health += HealthPerFood;
             region.AvailableFood -= MetabolicRate;
         }
     }
