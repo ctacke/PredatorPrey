@@ -5,7 +5,7 @@ namespace PredatorPrey;
 
 public class World
 {
-    public const int InitialPopulationSize = 500;
+    public const int InitialPopulationSize = 800;
     public const double InitialFoodDistribution = 0.05;
 
     public Size Dimensions { get; } = new Size(256, 128);

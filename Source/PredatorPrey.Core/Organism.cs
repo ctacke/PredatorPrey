@@ -73,12 +73,14 @@ public class Organism
     {
         ID = new Guid();
 
+        var isLandAnimal = Random.Shared.Next(0, 2) == 1;
+
         ChromosomeA = new Chromosome
         {
             Genes =
              [
-                new Legs { Value = (byte)Random.Shared.Next(0,2) },
-                new Fins { Value = (byte)Random.Shared.Next(0,2) }
+                new Legs { Value = (byte)(isLandAnimal ? 1 : 0) },
+                new Fins { Value = (byte)(isLandAnimal ? 0 : 1) }
             ]
         };
     }
@@ -153,6 +155,39 @@ public class Organism
     {
         if (IsDead) return;
 
+        var terrainFactor = 1.0f;
+
+        switch (region.Biome.TerrainType)
+        {
+            case TerrainType.Sea:
+                if (this.Has<Legs>())
+                {
+                    terrainFactor = 2f;
+                }
+                break;
+            case TerrainType.Littoral:
+            case TerrainType.Beach:
+                break;
+            case TerrainType.Grass:
+                if (this.Has<Fins>())
+                {
+                    terrainFactor = 2f;
+                }
+                break;
+            case TerrainType.Forest:
+                if (this.Has<Fins>())
+                {
+                    terrainFactor = 2.5f;
+                }
+                break;
+            case TerrainType.Mountain:
+                if (this.Has<Fins>())
+                {
+                    terrainFactor = 3f;
+                }
+                break;
+        }
+
         // TODO: metabolize differently based on biome/terrain?
         // TODO: add a gene for base metabolic burn
         if (movementAmount == 0)
@@ -161,7 +196,7 @@ public class Organism
         }
         else
         {
-            Health -= movementAmount;
+            Health -= (short)(movementAmount * terrainFactor);
         }
 
         if (IsDead)

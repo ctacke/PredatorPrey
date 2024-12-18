@@ -11,18 +11,44 @@ public class OrganismGenerator()
                 ID = Guid.NewGuid(),
                 ParentA = Guid.Empty,
                 ParentB = Guid.Empty,
+                Age = Random.Shared.Next(0, 1000)
             };
 
             var xPosition = 0;
             var yPosition = 0;
 
+            bool add = false;
             do
             {
-                xPosition = Random.Shared.Next(0, world.Dimensions.Width);
-                yPosition = Random.Shared.Next(0, world.Dimensions.Height);
-            } while (world.Population.GetOrganismsAtLocation(xPosition, yPosition).Count() != 0);
 
-            world.Population.Add(organism, xPosition, yPosition);
+                do
+                {
+                    xPosition = Random.Shared.Next(0, world.Dimensions.Width);
+                    yPosition = Random.Shared.Next(0, world.Dimensions.Height);
+                } while (world.Population.GetOrganismsAtLocation(xPosition, yPosition).Count() != 0);
+
+                switch (world.Regions[xPosition, yPosition].Biome.TerrainType)
+                {
+                    case TerrainType.Sea:
+                        if (organism.Has<Fins>())
+                        {
+                            add = true;
+                        }
+                        break;
+                    case TerrainType.Grass:
+                    case TerrainType.Forest:
+                        if (organism.Has<Legs>())
+                        {
+                            add = true;
+                        }
+                        break;
+                }
+
+                if (add)
+                {
+                    world.Population.Add(organism, xPosition, yPosition);
+                }
+            } while (!add);
         }
     }
 
