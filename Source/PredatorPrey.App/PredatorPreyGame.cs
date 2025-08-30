@@ -103,8 +103,6 @@ public class PredatorPreyGame : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-        // TODO: use this.Content to load your game content here
     }
 
     protected override void Update(GameTime gameTime)
@@ -157,6 +155,9 @@ public class PredatorPreyGame : Game
                 );
             }
         }
+
+        // Update window title with statistics
+        Window.Title = $"Predator-Prey Simulation - Gen: {_world.WorldAge} | Pop: {_world.Population.Population} | Deaths: Age({_world.DeathsFromAge}) Starv({_world.DeathsFromStarvation}) Over({_world.DeathsFromOverpopulation})";
 
         _spriteBatch.End();
 
