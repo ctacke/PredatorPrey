@@ -15,15 +15,21 @@ public class PredatorPreyGame : Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
+    private Texture2D _pixelTexture;
 
     private const int SquareSize = 5;
     private const int Padding = 0;
+    private const int TargetFPS = 30; // Limit simulation updates to 30 FPS
 
     private Rectangle[,] _gridRectangles;
+    private Color[,] _regionColors;
+    private bool _needsColorUpdate = true;
 
     private World _world;
-
     private ViewOptions _viewOptions;
+    
+    private double _lastUpdateTime = 0;
+    private double _updateInterval = 1000.0 / TargetFPS; // milliseconds
 
     public PredatorPreyGame()
     {
@@ -44,6 +50,20 @@ public class PredatorPreyGame : Game
         if (organism.IsAmphibian()) return Color.PaleGreen;
         if (organism.IsAcquatic()) return Color.White;
         return Color.DarkRed;
+    }
+
+    private void UpdateRegionColors()
+    {
+        if (!_needsColorUpdate) return;
+
+        for (int row = 0; row < _world.Dimensions.Height; row++)
+        {
+            for (int col = 0; col < _world.Dimensions.Width; col++)
+            {
+                _regionColors[col, row] = GetRegionColor(_world.Regions[col, row]);
+            }
+        }
+        _needsColorUpdate = false;
     }
 
     private Color GetRegionColor(Region region)
@@ -81,6 +101,7 @@ public class PredatorPreyGame : Game
 
         // Initialize color and rectangle arrays
         _gridRectangles = new Rectangle[_world.Dimensions.Width, _world.Dimensions.Height];
+        _regionColors = new Color[_world.Dimensions.Width, _world.Dimensions.Height];
 
         // Populate with random colors and positions
         Random random = new Random();
@@ -103,33 +124,24 @@ public class PredatorPreyGame : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
+        
+        // Create reusable pixel texture
+        _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
+        _pixelTexture.SetData(new[] { Color.White });
     }
 
     protected override void Update(GameTime gameTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
-        /*
-        // Handle mouse input
-        MouseState mouseState = Mouse.GetState();
 
-        if (mouseState.LeftButton == ButtonState.Pressed)
+        // Throttle simulation updates to improve performance
+        if (gameTime.TotalGameTime.TotalMilliseconds - _lastUpdateTime >= _updateInterval)
         {
-            for (int row = 0; row < _world.Dimensions.Height; row++)
-            {
-                for (int col = 0; col < _world.Dimensions.Width; col++)
-                {
-                    // Check if mouse is over a square
-                    if (_gridRectangles[col, row].Contains(mouseState.Position))
-                    {
-                        // TODO: REGION CLICKED
-                        break;
-                    }
-                }
-            }
+            _world.RunCycle();
+            _needsColorUpdate = true;
+            _lastUpdateTime = gameTime.TotalGameTime.TotalMilliseconds;
         }
-        */
-        _world.RunCycle();
 
         base.Update(gameTime);
     }
@@ -138,28 +150,31 @@ public class PredatorPreyGame : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
+        // Update colors only when simulation has changed
+        UpdateRegionColors();
+
         _spriteBatch.Begin();
 
-        // Draw colored squares
-        Texture2D pixel = new Texture2D(GraphicsDevice, 1, 1);
-        pixel.SetData(new[] { Color.White });
-
+        // Draw cached colored squares
         for (int row = 0; row < _world.Dimensions.Height; row++)
         {
             for (int col = 0; col < _world.Dimensions.Width; col++)
             {
                 _spriteBatch.Draw(
-                    pixel,
+                    _pixelTexture,
                     _gridRectangles[col, row],
-                    GetRegionColor(_world.Regions[col, row])
+                    _regionColors[col, row]
                 );
             }
         }
 
-        // Update window title with statistics
-        Window.Title = $"Predator-Prey Simulation - Gen: {_world.WorldAge} | Pop: {_world.Population.Population} | Deaths: Age({_world.DeathsFromAge}) Starv({_world.DeathsFromStarvation}) Over({_world.DeathsFromOverpopulation})";
-
         _spriteBatch.End();
+
+        // Update window title with statistics (less frequently)
+        if (_needsColorUpdate || gameTime.TotalGameTime.TotalMilliseconds % 500 < 16) // Update title every ~500ms
+        {
+            Window.Title = $"Predator-Prey Simulation - Gen: {_world.WorldAge} | Pop: {_world.Population.Population} | Deaths: Age({_world.DeathsFromAge}) Starv({_world.DeathsFromStarvation}) Over({_world.DeathsFromOverpopulation})";
+        }
 
         base.Draw(gameTime);
     }

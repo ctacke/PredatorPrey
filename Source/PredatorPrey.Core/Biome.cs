@@ -11,22 +11,22 @@ public class Biome(TerrainType terrainType)
         switch (TerrainType)
         {
             case TerrainType.Sea:
-                baseResult = 0.05f;
+                baseResult = SimulationConfig.SeaFoodGrowthRate;
                 break;
             case TerrainType.Littoral:
-                baseResult = 0.06f;
+                baseResult = SimulationConfig.LittoralFoodGrowthRate;
                 break;
             case TerrainType.Beach:
-                baseResult = 0.03f;
+                baseResult = SimulationConfig.BeachFoodGrowthRate;
                 break;
             case TerrainType.Grass:
-                baseResult = 0.06f;
+                baseResult = SimulationConfig.GrassFoodGrowthRate;
                 break;
             case TerrainType.Forest:
-                baseResult = 0.04f;
+                baseResult = SimulationConfig.ForestFoodGrowthRate;
                 break;
             case TerrainType.Mountain:
-                baseResult = 0.02f;
+                baseResult = SimulationConfig.MountainFoodGrowthRate;
                 break;
         }
 
@@ -40,19 +40,19 @@ public class Biome(TerrainType terrainType)
         switch (TerrainType)
         {
             case TerrainType.Sea:
-                return 4;
+                return SimulationConfig.SeaMaxPopulation;
             case TerrainType.Littoral:
-                return 5;
+                return SimulationConfig.LittoralMaxPopulation;
             case TerrainType.Beach:
-                return 3;
+                return SimulationConfig.BeachMaxPopulation;
             case TerrainType.Grass:
-                return 8;
+                return SimulationConfig.GrassMaxPopulation;
             case TerrainType.Forest:
-                return 3;
+                return SimulationConfig.ForestMaxPopulation;
             case TerrainType.Mountain:
-                return 2;
+                return SimulationConfig.MountainMaxPopulation;
             default:
-                return 1;
+                return SimulationConfig.DefaultMaxPopulation;
         }
     }
 
@@ -61,19 +61,19 @@ public class Biome(TerrainType terrainType)
         switch (TerrainType)
         {
             case TerrainType.Sea:
-                return 4;
+                return SimulationConfig.SeaMaxFood;
             case TerrainType.Littoral:
-                return 5;
+                return SimulationConfig.LittoralMaxFood;
             case TerrainType.Beach:
-                return 3;
+                return SimulationConfig.BeachMaxFood;
             case TerrainType.Grass:
-                return 8;
+                return SimulationConfig.GrassMaxFood;
             case TerrainType.Forest:
-                return 3;
+                return SimulationConfig.ForestMaxFood;
             case TerrainType.Mountain:
-                return 2;
+                return SimulationConfig.MountainMaxFood;
             default:
-                return 1;
+                return SimulationConfig.DefaultMaxFood;
         }
     }
 }

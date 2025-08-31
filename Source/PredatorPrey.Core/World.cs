@@ -5,8 +5,8 @@ namespace PredatorPrey;
 
 public class World
 {
-    public const int InitialPopulationSize = 800;
-    public const double InitialFoodDistribution = 0.05;
+    public static int InitialPopulationSize => SimulationConfig.InitialPopulationSize;
+    public static double InitialFoodDistribution => SimulationConfig.InitialFoodDistribution;
 
     public Size Dimensions { get; } = new Size(256, 128);
     //public Size Dimensions { get; } = new Size(512, 256);
@@ -47,7 +47,7 @@ public class World
             GrowFood(region);
         }
 
-        if (Population.Population > 10000)
+        if (Population.Population > SimulationConfig.PopulationAlertThreshold)
         {
             //Debugger.Break();
         }
@@ -88,17 +88,17 @@ public class World
                     }
 
                     // region is superpopulated.  Reduce food to zero
-                    if (currentpop > 2 * max)
+                    if (currentpop > SimulationConfig.ModerateOverpopulationMultiplier * max)
                     {
                         region.AvailableFood = 0;
                     }
 
-                    if (currentpop > 3 * max)
+                    if (currentpop > SimulationConfig.SevereOverpopulationMultiplier * max)
                     {
-                        organism.Health /= 4;
+                        organism.Health /= (short)SimulationConfig.SevereOverpopulationHealthDivisor;
                     }
 
-                    if (currentpop > 4 * max)
+                    if (currentpop > SimulationConfig.ExtremeOverpopulationMultiplier * max)
                     {
                         organism.Health = 0;
                     }
@@ -149,18 +149,19 @@ public class World
             var region = Regions[overlap.X, overlap.Y];
             var max = region.Biome.GetMaxPopulationCapacity();
 
-            if (parents.Count() < (max * 1.5))
+            // Only reproduce if population is well below carrying capacity
+            if (parents.Count() < (max * SimulationConfig.ReproductionPopulationMultiplier))
             {
-                var newOrganisms = parents
-                    .SelectMany((o1, i) => parents.Skip(i + 1)
-                    .Select(o2 => _organismGenerator.Reproduce(o1, o2)))
-                    .Where(c => c != null)
-                    .ToList();
-
-                if (newOrganisms.Count > 0)
+                // Limit reproduction attempts - only allow one pair to reproduce per region per cycle
+                var reproductiveParents = parents.Take(2).ToArray();
+                if (reproductiveParents.Length == 2)
                 {
-                    Population.AddRange(newOrganisms, overlap);
-                    Debug.WriteLine($"Population: {Population.Population}");
+                    var newOrganism = _organismGenerator.Reproduce(reproductiveParents[0], reproductiveParents[1]);
+                    if (newOrganism != null)
+                    {
+                        Population.Add(newOrganism, overlap.X, overlap.Y);
+                        Debug.WriteLine($"Population: {Population.Population}");
+                    }
                 }
             }
             else

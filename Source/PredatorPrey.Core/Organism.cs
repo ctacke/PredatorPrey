@@ -11,7 +11,7 @@ public enum DeathReason
 
 public class Organism
 {
-    private short _health = 0xff;
+    private short _health = SimulationConfig.InitialHealth;
     private int _age;
     private DeathReason? _deathReason;
 
@@ -22,33 +22,33 @@ public class Organism
     public Chromosome ChromosomeA { get; set; }
     public Chromosome ChromosomeB { get; set; }
 
-    public int MaxAge { get; set; } = 1000;
-    public int MinReproductionAge { get; set; } = 100;
+    public int MaxAge { get; set; } = SimulationConfig.MaxAge;
+    public int MinReproductionAge { get; set; } = SimulationConfig.MinReproductionAge;
 
     /// <summary>
     /// The likelihood that the organism will reproduce when interacting with another (percentile)
     /// </summary>
-    public float Fertility { get; set; } = 0.50f;
+    public float Fertility { get; set; } = SimulationConfig.BaseFertility;
 
     /// <summary>
     /// rate at which food is consumed (and, perhaps, things like movement rate)
     /// </summary>
-    public float MetabolicRate { get; set; } = 1.0f;
+    public float MetabolicRate { get; set; } = SimulationConfig.BaseMetabolicRate;
 
     /// <summary>
     /// How much "food" is this organism worth on death (as compost to the biome or as food to another organism)
     /// </summary>
-    public float ValueAsFood { get; set; } = 0.5f;
+    public float ValueAsFood { get; set; } = SimulationConfig.ValueAsFood;
 
     /// <summary>
     /// When a region can't provide food, the organism's health falls by this * metabolic rate
     /// </summary>
-    public short StarvationFactor { get; set; } = 2;
+    public short StarvationFactor { get; set; } = SimulationConfig.StarvationFactor;
 
     /// <summary>
     /// How much health does the organism get per metabolic-rate unit of food
     /// </summary>
-    public short HealthPerFood { get; set; } = 5;
+    public short HealthPerFood { get; set; } = SimulationConfig.HealthPerFood;
 
     public bool IsDead => Health == 0;
 
@@ -155,14 +155,14 @@ public class Organism
     {
         if (IsDead) return;
 
-        var terrainFactor = 1.0f;
+        var terrainFactor = SimulationConfig.BaseTerrainFactor;
 
         switch (region.Biome.TerrainType)
         {
             case TerrainType.Sea:
                 if (this.Has<Legs>())
                 {
-                    terrainFactor = 2f;
+                    terrainFactor = SimulationConfig.WaterTerrainFactor;
                 }
                 break;
             case TerrainType.Littoral:
@@ -171,19 +171,19 @@ public class Organism
             case TerrainType.Grass:
                 if (this.Has<Fins>())
                 {
-                    terrainFactor = 2f;
+                    terrainFactor = SimulationConfig.GrassTerrainFactor;
                 }
                 break;
             case TerrainType.Forest:
                 if (this.Has<Fins>())
                 {
-                    terrainFactor = 2.5f;
+                    terrainFactor = SimulationConfig.ForestTerrainFactor;
                 }
                 break;
             case TerrainType.Mountain:
                 if (this.Has<Fins>())
                 {
-                    terrainFactor = 3f;
+                    terrainFactor = SimulationConfig.MountainTerrainFactor;
                 }
                 break;
         }
@@ -192,11 +192,11 @@ public class Organism
         // TODO: add a gene for base metabolic burn
         if (movementAmount == 0)
         { // even no movement uses energy
-            Health--;
+            Health -= (short)(SimulationConfig.IdleMetabolismMultiplier * terrainFactor);
         }
         else
         {
-            Health -= (short)(movementAmount * terrainFactor);
+            Health -= (short)(movementAmount * terrainFactor * SimulationConfig.MovementMetabolismMultiplier);
         }
 
         if (IsDead)
@@ -212,22 +212,22 @@ public class Organism
         switch (terrain)
         {
             case TerrainType.Sea:
-                baseMotion = 3;
+                baseMotion = SimulationConfig.SeaBaseMovement;
                 break;
             case TerrainType.Littoral:
-                baseMotion = 2;
+                baseMotion = SimulationConfig.LittoralBaseMovement;
                 break;
             case TerrainType.Beach:
-                baseMotion = 2;
+                baseMotion = SimulationConfig.BeachBaseMovement;
                 break;
             case TerrainType.Grass:
-                baseMotion = 3;
+                baseMotion = SimulationConfig.GrassBaseMovement;
                 break;
             case TerrainType.Forest:
-                baseMotion = 2;
+                baseMotion = SimulationConfig.ForestBaseMovement;
                 break;
             case TerrainType.Mountain:
-                baseMotion = 1;
+                baseMotion = SimulationConfig.MountainBaseMovement;
                 break;
         }
 
