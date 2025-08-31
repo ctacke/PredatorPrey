@@ -52,16 +52,23 @@ public class OrganismGenerator()
         }
     }
 
-    public Organism? Reproduce(Organism parentA, Organism parentB)
+    public Organism? Reproduce(Organism parentA, Organism parentB, float adaptiveFertility)
     {
         if (parentA.CanReproduce && parentB.CanReproduce)
         {
-            if (Random.Shared.NextSingle() < (parentA.Fertility * parentB.Fertility))
+            // Use adaptive fertility instead of organism fertility for reproduction chance
+            if (Random.Shared.NextSingle() < (adaptiveFertility * adaptiveFertility))
             {
                 return new Organism(parentA, parentB);
             }
         }
 
         return null;
+    }
+    
+    // Keep backward compatibility with fixed fertility
+    public Organism? Reproduce(Organism parentA, Organism parentB)
+    {
+        return Reproduce(parentA, parentB, SimulationConfig.BaseFertility);
     }
 }
